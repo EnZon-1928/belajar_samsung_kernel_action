@@ -104,11 +104,11 @@ jobs:
 
     - name: Configure Virtual Memory
       run: |
-        sudo fallocate -l 10G /swapfile
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        free -h
+       sudo fallocate -l 10G /swapfile-extra
+       sudo chmod 600 /swapfile-extra
+       sudo mkswap /swapfile-extra
+       sudo swapon /swapfile-extra
+       free -h
 
     - name: 🔧 Setup Build Environment
       if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
