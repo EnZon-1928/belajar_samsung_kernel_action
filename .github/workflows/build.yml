@@ -84,8 +84,9 @@ jobs:
       id: cache-toolchain
       uses: actions/cache@v5
       with:
-        path: ~/neutron-clang
-        path: ~/androidcc
+        path: |
+      ~/neutron-clang
+      ~/androidcc
         key: clang-${{ github.event.inputs.CLANG_VERSION }}-${{ github.sha }}
         restore-keys: |
           clang-${{ github.event.inputs.CLANG_VERSION }}-
