@@ -298,7 +298,7 @@ export KBUILD_BUILD_USER=$USER
 export KBUILD_BUILD_HOST=$HOSTNAME
 export PATH="$TC_DIR/bin:$GCC_DIR/bin:$PATH"
 export ARCH=arm64
-export LLVM_IAS=0
+export LLVM_IAS=1
 export LLVM=1
 export CROSS_COMPILE="$GCC_DIR/bin/aarch64-linux-android-"
 export CLANG_TRIPLE="aarch64-linux-gnu-"
@@ -333,6 +333,12 @@ BUILD_FLAGS="O=$OUT_DIR ARCH=arm64 -j$(nproc --all)"
 if [ "$1" = "--regen-defconfig" ]; then
     regen_defconfig
     exit 0
+fi
+
+msg "Menyuntikkan bypass LLVM_IAS khusus untuk modul Crypto kuno..."
+if ! grep -q "no-integrated-as" arch/arm64/crypto/Makefile; then
+    echo "ccflags-y += -no-integrated-as" >> arch/arm64/crypto/Makefile
+    echo "asflags-y += -no-integrated-as" >> arch/arm64/crypto/Makefile
 fi
 
 mkdir -p "$OUT_DIR"
