@@ -5,11 +5,11 @@ on:
     inputs:
       REPO:
         description: '📦 Kernel repository'
-        default: 'EnZon-1928/belajar_android_kernel_samsung_sm6225.git'
+        default: 'EnZon-1928/a235f_osrc.git'
         required: true
       BRANCH:
         description: '🌿 Kernel branch'
-        default: 'master'
+        default: 'main'
         required: true
       DEVICE_TARGET:
         description: '📱 Target device to build'
@@ -22,7 +22,7 @@ on:
       ZIP_NAME:
         description: '📦 Custom ZIP name'
         required: false
-        default: 'SolsticeKernel-A23-'
+        default: 'ZharVe1L'
         type: string
       LTO:
         description: '🔗 Link Time Optimisation'
@@ -55,10 +55,10 @@ on:
       KSU:
         description: '🔑 Add KernelSU support'
         type: boolean
-        default: true
+        default: false
       KSU_BRANCH:
         description: '🌿 KernelSU branch'
-        required: true
+        required: false
         default: 'xxksu'
       KCFLAGS_W:
         description: '🛡️ Enable KCFLAGS=-w'
