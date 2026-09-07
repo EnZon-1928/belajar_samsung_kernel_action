@@ -27,25 +27,6 @@ error() {
     exit 1
 }
 
-send_telegram() {
-    local file="$1"
-    local md5="$2"
-    local time="$(($3 / 60))"
-
-    if [[ -z "$TG_TOKEN" || -z "$TG_CHAT_ID" ]]; then
-        msg "Telegram credentials missing. Skipping upload."
-        return
-    fi
-
-    msg "Uploading to Telegram..."
-    curl -s -F document=@$file \
-        -F chat_id="$TG_CHAT_ID" \
-        -F caption="$msg_bar" \
-        -F "disable_web_page_preview=true" \
-        "https://api.telegram.org/bot$TG_TOKEN/sendDocument"
-    msg "Upload completed!"
-}
-
 setup_deps() {
     set -e
     echo "INFO: Changing to faster APT mirror..."
