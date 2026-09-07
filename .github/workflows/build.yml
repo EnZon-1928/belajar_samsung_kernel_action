@@ -4,11 +4,11 @@ on:
     inputs:
       REPO:
         description: 'Kernel repository'
-        default: 'EnZon-1928/belajar_android_kernel_samsung_sm6225.git'
+        default: 'blxyzY/android_kernel_samsung_sm6225.git'
         required: true
       BRANCH:
         description: 'Kernel branch'
-        default: 'master'
+        default: 'stock'
         required: true
       DEVICE_TARGET:
         description: 'Target device to build'
@@ -21,7 +21,7 @@ on:
       LTO:
         description: 'Link Time Optimisation'
         required: true
-        default: 'full'
+        default: 'none'
         type: choice
         options:
           - none
