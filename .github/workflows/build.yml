@@ -4,28 +4,28 @@ on:
   workflow_dispatch:
     inputs:
       REPO:
-        description: '📦 Kernel repository'
+        description: 'Kernel repository'
         default: 'EnZon-1928/a235f_osrc.git'
         required: true
       BRANCH:
-        description: '🌿 Kernel branch'
+        description: 'Kernel branch'
         default: 'main'
         required: true
       DEVICE_TARGET:
-        description: '📱 Target device to build'
+        description: 'Target device to build'
         default: 'A235F'
         required: true
       DEFCONFIG:
-        description: '⚙️ Defconfig name'
+        description: 'Defconfig name'
         required: true
         default: 'a23_eur_open_defconfig'
       ZIP_NAME:
-        description: '📦 Custom ZIP name'
+        description: 'Custom ZIP name'
         required: false
         default: 'ZharVe1L'
         type: string
       LTO:
-        description: '🔗 Link Time Optimisation'
+        description: 'Link Time Optimization'
         required: true
         default: 'thin'
         type: choice
@@ -33,9 +33,9 @@ on:
           - none
           - thin
       CLANG_VERSION:
-        description: '🔧 Clang'
+        description: 'Clang compiler'
         required: true
-        default: 'neutron-clang23'
+        default: 'aosp-12'
         type: choice
         options:
           - neutron-clang23
@@ -45,7 +45,7 @@ on:
           - aosp-20
           - aosp-12
       SELINUX:
-        description: '🔒 SELinux mode'
+        description: 'SELinux mode'
         required: true
         default: 'enforcing'
         type: choice
@@ -53,15 +53,15 @@ on:
           - enforcing
           - permissive
       KSU:
-        description: '🔑 Add KernelSU support'
+        description: 'Add KernelSU support'
         type: boolean
         default: false
       KSU_BRANCH:
-        description: '🌿 KernelSU branch'
+        description: 'KernelSU branch'
         required: false
         default: 'xxksu'
       KCFLAGS_W:
-        description: '🛡️ Enable KCFLAGS=-w'
+        description: 'Enable KCFLAGS=-w'
         type: boolean
         default: true
 
@@ -69,18 +69,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: 🕐 Set Timezone
+    - name: Set Timezone
       run: sudo ln -sf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
     - uses: actions/checkout@v5
       with:
         fetch-depth: 1
 
-    - name: 📥 Clone kernel source
+    - name: Clone kernel source
       if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
       run: git clone --depth=1 --single-branch -b ${{ github.event.inputs.BRANCH }} --recursive https://github.com/${{ github.event.inputs.REPO }} kernel_root
         
-    - name: 💾 Cache Toolchain
+    - name: Cache Toolchain
       id: cache-toolchain
       uses: actions/cache@v5
       with:
@@ -92,17 +92,17 @@ jobs:
           clang-${{ github.event.inputs.CLANG_VERSION }}-
           clang-
 
-    - name: 🚀 Cache ccache
+    - name: Cache ccache
       uses: actions/cache@v5
       with:
         path: ~/.ccache
         key: ccache-kernel-${{ github.sha }}
         restore-keys: ccache-kernel-
 
-    - name: 🛠️ Prepare Dependencies
+    - name: Prepare Dependencies
       run: chmod +x ./build.sh && bash ./build.sh --setup-deps
 
-    - name: 🔧 Setup Build Environment
+    - name: Setup Build Environment
       if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
       id: buildKernel
       run: |
@@ -116,18 +116,15 @@ jobs:
           buildDetails="$CODENAME-$KERNEL_VER-$gitsha1"
         fi
         echo "buildDetails=$buildDetails" >> $GITHUB_OUTPUT
-        echo "currDate=$(date)" >> $GITHUB_OUTPUT
-        echo "kernelVer=$KERNEL_VER" >> $GITHUB_OUTPUT
-        echo "gitsha=$gitsha1" >> $GITHUB_OUTPUT
 
-    - name: 📦 Fetch Toolchains
+    - name: Fetch Toolchains
       if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' || github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
       env:
         UPDATE_TOOLCHAINS: ${{ github.event.inputs.UPDATE_TOOLCHAIN }}
         CLANG_VERSION: ${{ github.event.inputs.CLANG_VERSION }}
       run: bash ./build.sh --fetch-toolchains
 
-    - name: ⚡ Build Kernel
+    - name: Build Kernel
       if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
       env:
         BRANCH: ${{ github.event.inputs.BRANCH }}
@@ -141,14 +138,12 @@ jobs:
         KCFLAGS_W: "${{ github.event.inputs.KCFLAGS_W }}"
       run: |
         cd kernel_root
-        if [ ! -d ~/.ccache ]; then
-          mkdir -p ~/.ccache
-        fi
+        mkdir -p ~/.ccache
         
-        # Handle KSU
+        # Handle KernelSU
         if [[ "$KSU" == "true" ]]; then
           device_defconfig="arch/arm64/configs/${{ inputs.DEFCONFIG }}"
-          echo "🔑 Adding KernelSU support..."
+          echo "INFO: Injecting KernelSU support..."
           curl -LSs "https://raw.githubusercontent.com/RapliVx/KernelSU/xxksu/kernel/setup.sh" | bash -s "${{ inputs.KSU_BRANCH }}"
           
           echo "CONFIG_KSU=y" >> $device_defconfig
@@ -158,44 +153,21 @@ jobs:
           echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=n" >> $device_defconfig
           
           if ! grep -q "CONFIG_KSU_TAMPER_SYSCALL_TABLE" "$device_defconfig"; then
-            echo "❌ Fail! Failed to append defconfig"
+            echo "ERROR: Failed to append KernelSU defconfig."
             exit 1
           fi
-          echo "✅ KernelSU added successfully!"
+          echo "INFO: KernelSU module injected successfully."
         fi
         
-        # Handle SELinux
-        device_defconfig="arch/arm64/configs/${{ inputs.DEFCONFIG }}"
-        if [[ "${{ inputs.SELINUX }}" == "permissive" ]]; then
-          echo "🔓 Configuring kernel to SELinux Permissive..."
-          sed -i 's/CONFIG_CMDLINE=""/CONFIG_CMDLINE="androidboot.selinux=permissive"/' "$device_defconfig"
-          sed -i 's/# CONFIG_SECURITY_SELINUX_DEVELOP is not set/CONFIG_SECURITY_SELINUX_DEVELOP=y/' "$device_defconfig"
-          sed -i 's/CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE=y/# CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE is not set/' "$device_defconfig" 2>/dev/null || true
-          if grep -q "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "$device_defconfig"; then
-            sed -i 's/# CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE is not set/CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE=y/' "$device_defconfig"
-          else
-            echo "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE=y" >> "$device_defconfig"
-          fi
-          sed -i 's/CONFIG_SECURITY_DEFEX=y/# CONFIG_SECURITY_DEFEX is not set/' "$device_defconfig"
-          sed -i 's/CONFIG_PROCA=y/# CONFIG_PROCA is not set/' "$device_defconfig"
-          sed -i 's/CONFIG_FIVE=y/# CONFIG_FIVE is not set/' "$device_defconfig"
-          
-          echo "✅ SELinux: Permissive mode configured 🔓"
-        else
-          echo "🔒 Configuring kernel to SELinux Enforcing..."
-          sed -i 's/CONFIG_SECURITY_SELINUX_DEVELOP=y/# CONFIG_SECURITY_SELINUX_DEVELOP is not set/' "$device_defconfig"
-          
-          echo "✅ SELinux: Enforcing mode configured 🔒"
-        fi
-
-        echo "🚀 Starting kernel build..."
+        echo "INFO: Initializing kernel build..."
         bash ../build.sh
 
-    - name: 📤 Upload kernel artifacts
+    - name: Upload Kernel Artifacts
       uses: actions/upload-artifact@v5
       with:
         name: Kernel-${{ steps.buildKernel.outputs.buildDetails }}
         path: |
+          kernel_root/out/arch/arm64/boot/Image
           kernel_root/out/arch/arm64/boot/Image.gz
           kernel_root/out/.config
-          
+          *.zip
