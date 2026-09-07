@@ -335,9 +335,8 @@ if [ "$1" = "--regen-defconfig" ]; then
     exit 0
 fi
 
-msg "Menyuntikkan bypass LLVM_IAS khusus untuk modul Crypto dan ARM64 Lib kuno..."
-# Daftar direktori yang butuh bypass LLVM_IAS
-for makefile_dir in arch/arm64/crypto arch/arm64/lib; do
+msg "Menyuntikkan bypass LLVM_IAS khusus untuk ARM64 Lib..."
+for makefile_dir in arch/arm64/lib; do
     if [ -f "$makefile_dir/Makefile" ] && ! grep -q "fno-integrated-as" "$makefile_dir/Makefile"; then
         echo "ccflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
         echo "aflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
