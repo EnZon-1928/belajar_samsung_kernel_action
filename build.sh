@@ -347,7 +347,7 @@ export KCFLAGS="$KCFLAGS -Wno-error=unused-command-line-argument -Wno-error=gnu 
 
 COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "untracked")
 [ -z "$CI_ZIPNAME" ] && ZIPNAME="rsuntk_$DEVICE_TARGET-$(date '+%Y%m%d-%H%M')-$COMMIT_HASH.zip" || ZIPNAME=$CI_ZIPNAME
-BUILD_FLAGS="O=$OUT_DIR ARCH=arm64 -j1"
+BUILD_FLAGS="O=$OUT_DIR ARCH=arm64 -j$(nproc --all)"
 
 if [ "$1" = "--regen-defconfig" ]; then
     regen_defconfig
