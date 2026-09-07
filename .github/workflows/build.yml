@@ -131,8 +131,6 @@ jobs:
       if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
       env:
         BRANCH: ${{ github.event.inputs.BRANCH }}
-        TG_TOKEN: ${{ secrets.BOT_TOKEN }}
-        TG_CHAT_ID: ${{ secrets.CHAT_ID }}
         DEVICE_TARGET: ${{ github.event.inputs.DEVICE_TARGET }}
         DEFCONFIG: ${{ github.event.inputs.DEFCONFIG }}
         LTO: ${{ github.event.inputs.LTO }}
