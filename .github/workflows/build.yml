@@ -166,8 +166,4 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: Kernel-${{ steps.buildKernel.outputs.buildDetails }}
-        path: |
-          kernel_root/out/arch/arm64/boot/Image
-          kernel_root/out/arch/arm64/boot/Image.gz
-          kernel_root/out/.config
-          *.zip
+        path: "*.zip"
