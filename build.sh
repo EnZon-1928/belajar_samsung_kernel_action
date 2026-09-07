@@ -335,13 +335,18 @@ if [ "$1" = "--regen-defconfig" ]; then
     exit 0
 fi
 
-msg "Menyuntikkan bypass LLVM_IAS khusus untuk ARM64 Lib..."
-for makefile_dir in arch/arm64/lib; do
-    if [ -f "$makefile_dir/Makefile" ] && ! grep -q "fno-integrated-as" "$makefile_dir/Makefile"; then
-        echo "ccflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
-        echo "aflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
-        echo "asflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
-        msg "Bypass disuntikkan ke: $makefile_dir/Makefile"
+msg "Menyuntikkan bypass LLVM_IAS eksklusif untuk file Assembly di modul kuno..."
+for makefile_dir in arch/arm64/crypto arch/arm64/lib; do
+    if [ -f "$makefile_dir/Makefile" ]; then
+        # Hapus bypass ccflags-y jika sebelumnya sempat tertulis agar file C tidak crash
+        sed -i '/ccflags-y += -fno-integrated-as/d' "$makefile_dir/Makefile"
+        
+        # Suntikkan bypass khusus untuk file .S (Assembly) saja
+        if ! grep -q "aflags-y += -fno-integrated-as" "$makefile_dir/Makefile"; then
+            echo "aflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
+            echo "asflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
+            msg "Bypass Assembly disuntikkan ke: $makefile_dir/Makefile"
+        fi
     fi
 done
 
