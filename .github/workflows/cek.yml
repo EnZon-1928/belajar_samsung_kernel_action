@@ -1,0 +1,50 @@
+name: System Diagnostics
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CPU Specifications
+        run: |
+          echo "--- CPU Cores ---"
+          nproc --all
+          echo "--- CPU Details ---"
+          lscpu | grep -E 'Model name|CPU\(s\):'
+
+      - name: Check Initial Storage and RAM
+        run: |
+          echo "--- Initial Disk Space ---"
+          df -h /
+          echo ""
+          echo "--- Initial RAM ---"
+          free -h
+
+      - name: Clean Runner Environment
+        run: |
+          echo "Removing pre-installed software..."
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          echo "Cleanup completed."
+
+      - name: Allocate Swap Space
+        run: |
+          echo "Allocating 10GB swap space..."
+          sudo fallocate -l 10G /swapfile-extra
+          sudo chmod 600 /swapfile-extra
+          sudo mkswap /swapfile-extra
+          sudo swapon /swapfile-extra
+          echo "Swap allocated."
+
+      - name: Check Final Storage and RAM
+        run: |
+          echo "--- Final Disk Space ---"
+          df -h /
+          echo ""
+          echo "--- Final RAM ---"
+          free -h
