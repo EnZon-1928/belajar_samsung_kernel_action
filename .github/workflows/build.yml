@@ -5,11 +5,11 @@ on:
     inputs:
       REPO:
         description: '📦 Kernel repository'
-        default: 'EnZon-1928/belajar_android_kernel_samsung_sm6225.git'
+        default: 'https://github.com/EnZon-1928/belajar_MizKernel-A235F.git'
         required: true
       BRANCH:
         description: '🌿 Kernel branch'
-        default: 'master'
+        default: 'main'
         required: true
       DEVICE_TARGET:
         description: '📱 Target device to build'
