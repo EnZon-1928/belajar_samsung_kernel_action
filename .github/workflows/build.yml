@@ -96,19 +96,11 @@ jobs:
       uses: actions/cache@v5
       with:
         path: ~/.ccache
-        key: ccache-kernel-v2-${{ github.sha }}
-        restore-keys: ccache-kernel-v2-
+        key: ccache-kernel-${{ github.sha }}
+        restore-keys: ccache-kernel-
 
     - name: 🛠️ Prepare Dependencies
       run: chmod +x ./build.sh && bash ./build.sh --setup-deps
-
-    - name: Configure Virtual Memory
-      run: |
-       sudo fallocate -l 10G /swapfile-extra
-       sudo chmod 600 /swapfile-extra
-       sudo mkswap /swapfile-extra
-       sudo swapon /swapfile-extra
-       free -h
 
     - name: 🔧 Setup Build Environment
       if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
@@ -200,3 +192,12 @@ jobs:
 
         echo "🚀 Starting kernel build..."
         bash ../build.sh
+
+    - name: 📤 Upload kernel artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: Kernel-${{ steps.buildKernel.outputs.buildDetails }}
+        path: |
+          kernel_root/out/arch/arm64/boot/Image.gz
+          kernel_root/out/.config
+          
