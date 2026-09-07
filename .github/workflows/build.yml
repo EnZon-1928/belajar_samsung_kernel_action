@@ -5,7 +5,7 @@ on:
     inputs:
       REPO:
         description: '📦 Kernel repository'
-        default: 'https://github.com/EnZon-1928/belajar_MizKernel-A235F.git'
+        default: 'EnZon-1928/belajar_MizKernel-A235F.git'
         required: true
       BRANCH:
         description: '🌿 Kernel branch'
