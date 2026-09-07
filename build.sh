@@ -358,6 +358,15 @@ msg "Mematikan fitur keamanan bawaan Samsung (DEFEX, PROCA, INTEGRITY)..."
 ./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_TRUSTED_KEYRING
 ./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_AUDIT
 
+msg "Mematikan modul Hardware Crypto CE (Inkompatibel dengan Neutron Clang)..."
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA1_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA2_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_GHASH_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_CCM
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_BLK
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRCT10DIF_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRC32_ARM64_CE
+
 # Menyegarkan konfigurasi agar perubahan di atas tersinkronisasi
 make $BUILD_FLAGS olddefconfig
 
