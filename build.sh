@@ -454,8 +454,6 @@ EOF
     MD5_CHECK=$(md5sum "$ROOT_DIR/$ZIPNAME" | cut -d' ' -f1)
     msg "MD5: $MD5_CHECK"
 
-    send_telegram "$ROOT_DIR/$ZIPNAME" "$MD5_CHECK" "$SECONDS"
-
     [ "$DO_CLEAN" = "true" ] && rm -rf "$OUT_DIR"
 
     echo -e "\n${green}Build completed in $((SECONDS / 60)) minute(s)!${reset}"
