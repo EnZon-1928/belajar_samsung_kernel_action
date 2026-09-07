@@ -228,6 +228,27 @@ msg "Applying security and module overrides..."
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_ALL
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_SHA512
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_HASH
+# === TAMBAHAN DARI @PHYSWIZZ: Sisa RKP & KDP ===
+./scripts/config --file "$OUT_DIR/.config" --disable RKP
+./scripts/config --file "$OUT_DIR/.config" --disable RKP_KDP
+./scripts/config --file "$OUT_DIR/.config" --disable RKP_NS_PROT
+./scripts/config --file "$OUT_DIR/.config" --disable RKP_DMAP_PROT
+./scripts/config --file "$OUT_DIR/.config" --disable KDP
+./scripts/config --file "$OUT_DIR/.config" --disable KDP_CRED
+
+# === TAMBAHAN DARI @PHYSWIZZ: Sensor Anti-Root & Log Ekstra ===
+./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_SETUID
+./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_FORK
+./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_ROOTING_LOG
+./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LOG
+./scripts/config --file "$OUT_DIR/.config" --disable KNOX_NCM
+./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DSMS
+./scripts/config --file "$OUT_DIR/.config" --disable DM_VERITY
+
+# === TAMBAHAN DARI @PHYSWIZZ: Modul Pemaksaan (Wi-Fi/Vendor) ===
+./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_LOAD
+./scripts/config --file "$OUT_DIR/.config" --enable MODULE_UNLOAD
+./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_UNLOAD
 
 ./scripts/config --file "$OUT_DIR/.config" --disable UH
 ./scripts/config --file "$OUT_DIR/.config" --disable UH_RKP
