@@ -335,11 +335,15 @@ if [ "$1" = "--regen-defconfig" ]; then
     exit 0
 fi
 
-msg "Menyuntikkan bypass LLVM_IAS khusus untuk modul Crypto kuno..."
-if ! grep -q "no-integrated-as" arch/arm64/crypto/Makefile; then
-    echo "ccflags-y += -no-integrated-as" >> arch/arm64/crypto/Makefile
-    echo "asflags-y += -no-integrated-as" >> arch/arm64/crypto/Makefile
-fi
+msg "Menyuntikkan bypass LLVM_IAS khusus untuk modul Crypto dan ARM64 Lib kuno..."
+# Daftar direktori yang butuh bypass LLVM_IAS
+for makefile_dir in arch/arm64/crypto arch/arm64/lib; do
+    if [ -f "$makefile_dir/Makefile" ] && ! grep -q "no-integrated-as" "$makefile_dir/Makefile"; then
+        echo "ccflags-y += -no-integrated-as" >> "$makefile_dir/Makefile"
+        echo "asflags-y += -no-integrated-as" >> "$makefile_dir/Makefile"
+        msg "Bypass disuntikkan ke: $makefile_dir/Makefile"
+    fi
+done
 
 mkdir -p "$OUT_DIR"
 msg "Starting compilation for $DEVICE_TARGET using $DEFCONFIG..."
