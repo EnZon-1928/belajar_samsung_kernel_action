@@ -350,9 +350,24 @@ for makefile_dir in arch/arm64/crypto arch/arm64/lib; do
     fi
 done
 
+msg "Menyuntikkan Patch Bypass Vermagic ke kernel/modules.c..."
+if [ -f "kernel/modules.c" ]; then
+    # Mengubah baris pengecekan return -ENOEXEC agar longgar terhadap modul vendor
+    sed -i 's/return -ENOEXEC;/\/\/return -ENOEXEC;/g' kernel/modules.c
+    msg "Patch kernel/modules.c berhasil disuntikkan!"
+fi
+
 mkdir -p "$OUT_DIR"
 msg "Starting compilation for $DEVICE_TARGET using $DEFCONFIG..."
 make $BUILD_FLAGS $DEFCONFIG
+
+msg "Menerapkan Wi-Fi Fix (@RissuDesu) pada Konfigurasi..."
+./scripts/config --file "$OUT_DIR/.config" --disable MODVERSIONS
+./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG
+./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_FORCE
+./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_ALL
+./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_SHA512
+./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_HASH
 
 msg "Mematikan fitur keamanan bawaan Samsung (DEFEX, PROCA, INTEGRITY)..."
 ./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DEFEX
