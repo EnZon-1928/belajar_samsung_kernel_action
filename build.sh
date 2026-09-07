@@ -335,6 +335,14 @@ if [ "$1" = "--regen-defconfig" ]; then
     exit 0
 fi
 
+msg "Membungkam paksaan kompilasi HDM & DEFEX dari security/Makefile..."
+if [ -f "security/Makefile" ]; then
+    # Menghapus paksaan kompilasi (obj-y) yang mengandung kata hdm atau defex
+    sed -i '/hdm/d' security/Makefile
+    sed -i '/defex/d' security/Makefile
+    msg "Modul HDM dan DEFEX berhasil diblokir dari Makefile!"
+fi
+
 msg "Menyuntikkan bypass LLVM_IAS eksklusif untuk file Assembly di modul kuno..."
 for makefile_dir in arch/arm64/crypto arch/arm64/lib; do
     if [ -f "$makefile_dir/Makefile" ]; then
@@ -368,6 +376,17 @@ msg "Menerapkan Wi-Fi Fix (@RissuDesu) pada Konfigurasi..."
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_ALL
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_SHA512
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_HASH
+
+msg "Menerapkan konfigurasi Anti-Root & Knox bypass ala @physwizz..."
+./scripts/config --file "$OUT_DIR/.config" --disable UH
+./scripts/config --file "$OUT_DIR/.config" --disable UH_RKP
+./scripts/config --file "$OUT_DIR/.config" --disable TIMA
+./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LKMAUTH
+./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LKM_BLOCK
+./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LKMAUTH_CODE_PROT
+./scripts/config --file "$OUT_DIR/.config" --disable FIVE
+./scripts/config --file "$OUT_DIR/.config" --disable KNOX_KAP
+./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_ROOTING
 
 msg "Mematikan fitur keamanan bawaan Samsung (DEFEX, PROCA, INTEGRITY)..."
 ./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DEFEX
