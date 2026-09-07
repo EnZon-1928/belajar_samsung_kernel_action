@@ -298,7 +298,7 @@ export KBUILD_BUILD_USER=$USER
 export KBUILD_BUILD_HOST=$HOSTNAME
 export PATH="$TC_DIR/bin:$GCC_DIR/bin:$PATH"
 export ARCH=arm64
-export LLVM_IAS=1
+export LLVM_IAS=0
 export LLVM=1
 export CROSS_COMPILE="$GCC_DIR/bin/aarch64-linux-android-"
 export CLANG_TRIPLE="aarch64-linux-gnu-"
@@ -338,6 +338,19 @@ fi
 mkdir -p "$OUT_DIR"
 msg "Starting compilation for $DEVICE_TARGET using $DEFCONFIG..."
 make $BUILD_FLAGS $DEFCONFIG
+
+msg "Mematikan fitur keamanan bawaan Samsung (DEFEX, PROCA, INTEGRITY)..."
+./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DEFEX
+./scripts/config --file "$OUT_DIR/.config" --disable PROCA
+./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY
+./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_SIGNATURE
+./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_ASYMMETRIC_KEYS
+./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_TRUSTED_KEYRING
+./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_AUDIT
+
+# Menyegarkan konfigurasi agar perubahan di atas tersinkronisasi
+make $BUILD_FLAGS olddefconfig
+
 configure_lto
 make $BUILD_FLAGS
 
