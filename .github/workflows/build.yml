@@ -198,27 +198,5 @@ jobs:
           echo "✅ SELinux: Enforcing mode configured 🔒"
         fi
 
-        # Force Disable LTO
-        echo "🔧 Mematikan LTO secara paksa dari defconfig..."
-        sed -i 's/CONFIG_LTO_CLANG_FULL=y/# CONFIG_LTO_CLANG_FULL is not set/' "$device_defconfig"
-        sed -i 's/CONFIG_LTO_CLANG_THIN=y/# CONFIG_LTO_CLANG_THIN is not set/' "$device_defconfig"
-        sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/' "$device_defconfig"
-        echo "CONFIG_LTO_NONE=y" >> "$device_defconfig"
-
         echo "🚀 Starting kernel build..."
         bash ../build.sh
-
-    - name: 📦 Package Kernel (AnyKernel3)
-      if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
-      run: |
-        echo "Bungkus kernel mentah ke AnyKernel3..."
-        cp kernel_root/out/arch/arm64/boot/Image.gz external/anykernel3/
-        cd external/anykernel3
-        zip -r9 ../../Flashable-Kernel-${{ steps.buildKernel.outputs.buildDetails }}.zip *
-
-    - name: 📤 Upload kernel artifacts
-      uses: actions/upload-artifact@v5
-      if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
-      with:
-        name: Flashable-Kernel-${{ steps.buildKernel.outputs.buildDetails }}
-        path: Flashable-Kernel-${{ steps.buildKernel.outputs.buildDetails }}.zip
