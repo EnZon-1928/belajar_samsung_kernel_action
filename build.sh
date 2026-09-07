@@ -27,39 +27,11 @@ error() {
     exit 1
 }
 
-send_telegram() {
-    local file="$1"
-    local md5="$2"
-    local time="$(($3 / 60))"
-
-    if [[ -z "$TG_TOKEN" || -z "$TG_CHAT_ID" ]]; then
-        msg "Telegram credentials missing. Skipping upload."
-        return
-    fi
-
-    msg "Uploading to Telegram..."
-    curl -s -F document=@$file \
-        -F chat_id="$TG_CHAT_ID" \
-        -F caption="$msg_bar" \
-        -F "disable_web_page_preview=true" \
-        "https://api.telegram.org/bot$TG_TOKEN/sendDocument"
-    msg "Upload completed!"
-}
-
 setup_deps() {
     set -e
-    echo "INFO: Changing to faster APT mirror..."
-    sudo sed -i 's/archive.ubuntu.com/kartolo.sby.datautama.net.id/g' /etc/apt/sources.list
-    sudo sed -i 's/security.ubuntu.com/kartolo.sby.datautama.net.id/g' /etc/apt/sources.list
-    
-    echo "INFO: Updating package lists..."
-    sudo apt update -y || { echo "ERROR: apt update failed"; exit 1; }
-    
-    echo "INFO: Installing dependencies..."
-    sudo apt install -y --no-install-recommends \
-        bc bison ccache cpio curl flex git libssl-dev lz4 perl python-is-python3 tar wget zstd
-    
-    echo "INFO: Dependencies installation completed!"
+    sudo apt update -y
+    sudo apt install -y build-essential openssl pip python2.7
+    sudo ln -sf /usr/bin/python2.7 /usr/bin/python
 }
 
 _setup_toolchain() {
