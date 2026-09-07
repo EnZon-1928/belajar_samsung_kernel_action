@@ -12,16 +12,16 @@ on:
         required: true
       DEVICE_TARGET:
         description: 'Target device to build'
-        default: 'a23nsxx'
+        default: 'A235F'
         required: true
       DEFCONFIG:
         description: 'Defconfig name'
         required: true
-        default: ''
+        default: 'a23_eur_open_defconfig'
       LTO:
         description: 'Link Time Optimisation'
         required: true
-        default: 'none'
+        default: 'full'
         type: choice
         options:
           - none
@@ -34,7 +34,7 @@ on:
       KSU_BRANCH:
         description: 'KernelSU branch'
         required: true
-        default: 'main'
+        default: 'master'
       KCFLAGS_W:
         description: 'Enable KCFLAGS=-w'
         type: boolean
