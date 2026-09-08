@@ -35,6 +35,16 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y aria2 figlet libncurses5 git python-is-python3 python2 python3 wget curl libc6-dev tar cpio default-jdk git-core gnupg flex bison gperf build-essential zip bc grep tofrodos python3-markdown libxml2-utils xsltproc zlib1g-dev
 
+    - name: 2.5. Operasi Sapu Jagat (Pecat Wrapper & Bersihkan Kconfig)
+      run: |
+        # 1. Pecat gcc-wrapper.py dari Makefile agar tidak dieksekusi
+        sed -i 's/$(PYTHON) $(srctree)\/scripts\/gcc-wrapper.py //g' Makefile
+        
+        # 2. Hapus baris karakter sampah Git Conflict (<<<<<<<, =======, >>>>>>>) di Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' init/Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' kernel/trace/Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' lib/Kconfig.debug
+        
     - name: 3. Kompilasi Kernel (Menjalankan runner.sh)
       run: |
         # Beri akses eksekusi ke script
