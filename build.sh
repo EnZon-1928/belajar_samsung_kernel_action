@@ -241,7 +241,6 @@ msg "Applying security and module overrides..."
 ./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_FORK
 ./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_ROOTING_LOG
 ./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LOG
-./scripts/config --file "$OUT_DIR/.config" --disable KNOX_NCM
 ./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DSMS
 ./scripts/config --file "$OUT_DIR/.config" --disable DM_VERITY
 
