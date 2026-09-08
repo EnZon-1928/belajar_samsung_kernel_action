@@ -16,16 +16,18 @@ jobs:
         fetch-depth: 1
         # PERHATIKAN: Baris "submodules: 'recursive'" DIHAPUS dari sini!
 
-    - name: 1.5. Bedah Submodule & Clone Clang LineageOS
+    - name: 1.5. Kloning Bedah Spesifik (Anti-Babi Buta)
       run: |
-        # 1. Hapus konfigurasi submodule GitLab yang mati
-        git config --file .gitmodules --remove-section submodule."toolchain/clang-r416183b"
+        # 1. Tarik HANYA submodule yang dipastikan masih hidup satu per satu
+        git submodule update --init KernelSU-Next
+        git submodule update --init toolchain/aarch64-linux-android-4.9-llvm
+        git submodule update --init toolchain/clang-r383902
+        git submodule update --init toolchain/qcom-stuff-clang
         
-        # 2. Unduh sisa submodule yang sehat (KSU-Next, GCC 4.9)
-        git submodule sync
-        git submodule update --init --recursive
+        # 2. Buang cangkang kosong folder clang r416183b bawaan MizKernel (jika ada)
+        rm -rf toolchain/clang-r416183b
         
-        # 3. Kloning Clang r416183b resmi dari LineageOS
+        # 3. Kloning Clang LineageOS secara manual persis ke lokasi yang dibutuhkan runner.sh
         git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git toolchain/clang-r416183b
 
     - name: 2. Install Dependencies (Berdasarkan gitpod.yml)
