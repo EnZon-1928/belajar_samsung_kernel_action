@@ -195,23 +195,6 @@ COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "untracked")
 ZIPNAME=${CI_ZIPNAME:-"kernel_$DEVICE_TARGET-$(date '+%Y%m%d-%H%M')-$COMMIT_HASH.zip"}
 BUILD_FLAGS="O=$OUT_DIR ARCH=arm64 -j$(nproc --all)"
 
-msg "Disabling HDM & DEFEX strict compilation in security/Makefile..."
-if [ -f "security/Makefile" ]; then
-    sed -i '/hdm/d' security/Makefile
-    sed -i '/defex/d' security/Makefile
-fi
-
-msg "Injecting LLVM_IAS bypass for legacy ARM64 assembly files..."
-for makefile_dir in arch/arm64/crypto arch/arm64/lib; do
-    if [ -f "$makefile_dir/Makefile" ]; then
-        sed -i '/ccflags-y += -fno-integrated-as/d' "$makefile_dir/Makefile"
-        if ! grep -q "aflags-y += -fno-integrated-as" "$makefile_dir/Makefile"; then
-            echo "aflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
-            echo "asflags-y += -fno-integrated-as" >> "$makefile_dir/Makefile"
-        fi
-    fi
-done
-
 msg "Patching kernel/modules.c for vendor module compatibility..."
 if [ -f "kernel/modules.c" ]; then
     sed -i 's/return -ENOEXEC;/\/\/return -ENOEXEC;/g' kernel/modules.c
@@ -228,52 +211,11 @@ msg "Applying security and module overrides..."
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_ALL
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_SHA512
 ./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_HASH
-# === TAMBAHAN DARI @PHYSWIZZ: Sisa RKP & KDP ===
-./scripts/config --file "$OUT_DIR/.config" --disable RKP
-./scripts/config --file "$OUT_DIR/.config" --disable RKP_KDP
-./scripts/config --file "$OUT_DIR/.config" --disable RKP_NS_PROT
-./scripts/config --file "$OUT_DIR/.config" --disable RKP_DMAP_PROT
-./scripts/config --file "$OUT_DIR/.config" --disable KDP
-./scripts/config --file "$OUT_DIR/.config" --disable KDP_CRED
-
-# === TAMBAHAN DARI @PHYSWIZZ: Sensor Anti-Root & Log Ekstra ===
-./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_SETUID
-./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_FORK
-./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_ROOTING_LOG
-./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LOG
-./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DSMS
-./scripts/config --file "$OUT_DIR/.config" --disable DM_VERITY
 
 # === TAMBAHAN DARI @PHYSWIZZ: Modul Pemaksaan (Wi-Fi/Vendor) ===
 ./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_LOAD
 ./scripts/config --file "$OUT_DIR/.config" --enable MODULE_UNLOAD
 ./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_UNLOAD
-
-./scripts/config --file "$OUT_DIR/.config" --disable UH
-./scripts/config --file "$OUT_DIR/.config" --disable UH_RKP
-./scripts/config --file "$OUT_DIR/.config" --disable TIMA
-./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LKMAUTH
-./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LKM_BLOCK
-./scripts/config --file "$OUT_DIR/.config" --disable TIMA_LKMAUTH_CODE_PROT
-./scripts/config --file "$OUT_DIR/.config" --disable FIVE
-./scripts/config --file "$OUT_DIR/.config" --disable KNOX_KAP
-./scripts/config --file "$OUT_DIR/.config" --disable SEC_RESTRICT_ROOTING
-
-./scripts/config --file "$OUT_DIR/.config" --disable SECURITY_DEFEX
-./scripts/config --file "$OUT_DIR/.config" --disable PROCA
-./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY
-./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_SIGNATURE
-./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_ASYMMETRIC_KEYS
-./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_TRUSTED_KEYRING
-./scripts/config --file "$OUT_DIR/.config" --disable INTEGRITY_AUDIT
-
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA1_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA2_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_GHASH_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_CCM
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_BLK
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRCT10DIF_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRC32_ARM64_CE
 
 msg "Applying SELinux Policy: ${SELINUX^^}..."
 if [ "$SELINUX" = "permissive" ]; then
