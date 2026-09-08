@@ -5,11 +5,11 @@ on:
     inputs:
       REPO:
         description: 'Kernel repository'
-        default: 'EnZon-1928/a235f_osrc.git'
+        default: 'EnZon-1928/belajar_android_kernel_samsung_sm6225.git'
         required: true
       BRANCH:
         description: 'Kernel branch'
-        default: 'main'
+        default: 'master'
         required: true
       DEVICE_TARGET:
         description: 'Target device to build'
