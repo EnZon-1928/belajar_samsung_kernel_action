@@ -300,10 +300,11 @@ if [ ! -d "$ANYKERNEL_DIR" ]; then
     error "AnyKernel3 directory not found at $ANYKERNEL_DIR"
 fi
 
-if [ -f "$OUT_DIR/arch/arm64/boot/Image" ]; then
+if [ -f "$OUT_DIR/arch/arm64/boot/Image.gz" ]; then
     msg "Compilation successful. Packaging build artifacts..."
 
-    cp "$OUT_DIR/arch/arm64/boot/Image" "$ANYKERNEL_DIR/"
+    # Memindahkan kernel yang sudah terkompresi (Image.gz)
+    cp "$OUT_DIR/arch/arm64/boot/Image.gz" "$ANYKERNEL_DIR/"
 
     cat > utsrelease.c << 'EOF'
 #include <stdio.h>
