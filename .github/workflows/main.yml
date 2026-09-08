@@ -16,14 +16,17 @@ jobs:
         fetch-depth: 1
         # PERHATIKAN: Baris "submodules: 'recursive'" DIHAPUS dari sini!
 
-    - name: 1.5. Bypass GitLab Submodule & Clone KSU
+    - name: 1.5. Bedah Submodule & Clone Clang LineageOS
       run: |
-        # 1. Ganti URL GitLab yang digembok dengan mirror Clang r416183b publik di GitHub
-        sed -i 's|https://gitlab.com/Mizumo-prjkt/clang-r416183b.git|https://github.com/StormBreaker-Project/clang-r416183b.git|g' .gitmodules
+        # 1. Hapus konfigurasi submodule GitLab yang mati
+        git config --file .gitmodules --remove-section submodule."toolchain/clang-r416183b"
         
-        # 2. Terapkan URL baru dan unduh semua submodule (Toolchain & KSU-Next)
+        # 2. Unduh sisa submodule yang sehat (KSU-Next, GCC 4.9)
         git submodule sync
         git submodule update --init --recursive
+        
+        # 3. Kloning Clang r416183b resmi dari LineageOS
+        git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git toolchain/clang-r416183b
 
     - name: 2. Install Dependencies (Berdasarkan gitpod.yml)
       run: |
