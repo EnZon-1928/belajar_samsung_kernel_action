@@ -195,35 +195,9 @@ COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "untracked")
 ZIPNAME=${CI_ZIPNAME:-"kernel_$DEVICE_TARGET-$(date '+%Y%m%d-%H%M')-$COMMIT_HASH.zip"}
 BUILD_FLAGS="O=$OUT_DIR ARCH=arm64 -j$(nproc --all)"
 
-msg "Patching kernel/modules.c for vendor module compatibility..."
-if [ -f "kernel/modules.c" ]; then
-    sed -i 's/return -ENOEXEC;/\/\/return -ENOEXEC;/g' kernel/modules.c
-fi
-
 mkdir -p "$OUT_DIR"
 msg "Generating base defconfig..."
 make $BUILD_FLAGS $DEFCONFIG
-
-msg "Applying security and module overrides..."
-./scripts/config --file "$OUT_DIR/.config" --disable MODVERSIONS
-./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG
-./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_FORCE
-./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_ALL
-./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_SHA512
-./scripts/config --file "$OUT_DIR/.config" --disable MODULE_SIG_HASH
-
-# === TAMBAHAN DARI @PHYSWIZZ: Modul Pemaksaan (Wi-Fi/Vendor) ===
-./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_LOAD
-./scripts/config --file "$OUT_DIR/.config" --enable MODULE_UNLOAD
-./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_UNLOAD
-
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA1_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA2_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_GHASH_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_CCM
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_BLK
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRCT10DIF_ARM64_CE
-./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRC32_ARM64_CE
 
 msg "Applying SELinux Policy: ${SELINUX^^}..."
 if [ "$SELINUX" = "permissive" ]; then
@@ -252,8 +226,6 @@ fi
 
 if [ -f "$OUT_DIR/arch/arm64/boot/Image.gz" ]; then
     msg "Compilation successful. Packaging build artifacts..."
-
-    # Memindahkan kernel yang sudah terkompresi (Image.gz)
     cp "$OUT_DIR/arch/arm64/boot/Image.gz" "$ANYKERNEL_DIR/"
 
     cat > utsrelease.c << 'EOF'
