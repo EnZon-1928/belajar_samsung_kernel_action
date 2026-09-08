@@ -217,6 +217,14 @@ msg "Applying security and module overrides..."
 ./scripts/config --file "$OUT_DIR/.config" --enable MODULE_UNLOAD
 ./scripts/config --file "$OUT_DIR/.config" --enable MODULE_FORCE_UNLOAD
 
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA1_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_SHA2_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_GHASH_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_CCM
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_AES_ARM64_CE_BLK
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRCT10DIF_ARM64_CE
+./scripts/config --file "$OUT_DIR/.config" --disable CRYPTO_CRC32_ARM64_CE
+
 msg "Applying SELinux Policy: ${SELINUX^^}..."
 if [ "$SELINUX" = "permissive" ]; then
     ./scripts/config --file "$OUT_DIR/.config" --set-str CMDLINE "androidboot.selinux=permissive"
