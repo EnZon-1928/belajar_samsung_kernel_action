@@ -8,13 +8,22 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: 1. Checkout MizKernel & Submodules
+    - name: 1. Checkout MizKernel
       uses: actions/checkout@v4
       with:
-        repository: 'IsaacCodesStuff/MizKernel-A235F' # Mengambil dari repo MizKernel
+        repository: 'IsaacCodesStuff/MizKernel-A235F'
         ref: 'main'
-        submodules: 'recursive' # KRUSIAL: Ini akan mengunduh KSU-Next dan Toolchain secara otomatis
         fetch-depth: 1
+        # PERHATIKAN: Baris "submodules: 'recursive'" DIHAPUS dari sini!
+
+    - name: 1.5. Bypass GitLab Submodule & Clone KSU
+      run: |
+        # 1. Ganti URL GitLab yang digembok dengan mirror Clang r416183b publik di GitHub
+        sed -i 's|https://gitlab.com/Mizumo-prjkt/clang-r416183b.git|https://github.com/StormBreaker-Project/clang-r416183b.git|g' .gitmodules
+        
+        # 2. Terapkan URL baru dan unduh semua submodule (Toolchain & KSU-Next)
+        git submodule sync
+        git submodule update --init --recursive
 
     - name: 2. Install Dependencies (Berdasarkan gitpod.yml)
       run: |
