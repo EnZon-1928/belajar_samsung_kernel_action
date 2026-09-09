@@ -93,7 +93,6 @@ jobs:
         echo "currDate=$(date)" >> $GITHUB_OUTPUT
         echo "kernelVer=$KERNEL_VER" >> $GITHUB_OUTPUT
         echo "gitsha=$gitsha1" >> $GITHUB_OUTPUT
-        - name: 2.5. Operasi Bedah Presisi (Fix Kconfig, stat.c & bpf_trace.c)
 
     - name: 2.5. Operasi Bedah Presisi (Fix Kconfig, stat.c & bpf_trace.c)
       run: |
