@@ -114,6 +114,12 @@ jobs:
         sed -i 's/^[[:space:]]*q[[:space:]]*$/#endif/g' fs/stat.c
         # b. Hapus baris if() yang cacat/terpotong (yang berakhiran AT_NO_AUTOMOUNT | )
         sed -i '/AT_NO_AUTOMOUNT |/d' fs/stat.c
+        sed -i '/CONFIG_GCC_VERSION/d' arch/arm64/configs/${{ github.event.inputs.DEFCONFIG }}
+        sed -i '/CONFIG_CC_IS_CLANG/d' arch/arm64/configs/${{ github.event.inputs.DEFCONFIG }}
+        sed -i '/CONFIG_CLANG_VERSION/d' arch/arm64/configs/${{ github.event.inputs.DEFCONFIG }}
+
+        # 4. Suntik paksa pengenalan Clang ke dalam build.sh (posisi file ada di luar kernel_root)
+        sed -i 's/ARCH=arm64/ARCH=arm64 CC=clang CXX=clang++/' ../build.sh
 
     - name: Fetch Toolchains
       if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' || github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
