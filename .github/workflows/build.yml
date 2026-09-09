@@ -120,6 +120,7 @@ jobs:
 
         # 4. Suntik paksa pengenalan Clang ke dalam build.sh (posisi file ada di luar kernel_root)
         sed -i 's/ARCH=arm64/ARCH=arm64 CC=clang CXX=clang++/' ../build.sh
+        chmod +x scripts/config
 
     - name: Fetch Toolchains
       if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' || github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
