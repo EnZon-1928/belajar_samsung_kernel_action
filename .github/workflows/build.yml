@@ -121,6 +121,7 @@ jobs:
         # 4. Suntik paksa pengenalan Clang ke dalam build.sh (posisi file ada di luar kernel_root)
         sed -i 's/ARCH=arm64/ARCH=arm64 CC=clang CXX=clang++/' ../build.sh
         chmod +x scripts/config
+        sed -i '1i #ifndef NOHZ_KICK_MASK\n#define NOHZ_KICK_MASK (NOHZ_BALANCE_KICK | NOHZ_STATS_KICK)\n#endif' kernel/sched/core.c
 
     - name: Fetch Toolchains
       if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' || github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
