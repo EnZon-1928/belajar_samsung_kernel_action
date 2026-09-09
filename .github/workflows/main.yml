@@ -102,7 +102,7 @@ jobs:
         EOF
         
         # Ambil hasil kompilasi Image kernel dari output runner.sh
-        cp ../arch/arm64/boot/Image.gz .
+        cp ../arch/arm64/boot/Image .
         
         # Bungkus semuanya menjadi file ZIP
         zip -r9 ../MizKernel-ZharVe1L-A235F-KSUNext.zip *
