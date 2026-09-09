@@ -93,6 +93,28 @@ jobs:
         echo "currDate=$(date)" >> $GITHUB_OUTPUT
         echo "kernelVer=$KERNEL_VER" >> $GITHUB_OUTPUT
         echo "gitsha=$gitsha1" >> $GITHUB_OUTPUT
+        - name: 2.5. Operasi Bedah Presisi (Fix Kconfig, stat.c & bpf_trace.c)
+
+    - name: 2.5. Operasi Bedah Presisi (Fix Kconfig, stat.c & bpf_trace.c)
+      run: |
+        cd kernel_root
+        # 1. Pecat gcc-wrapper.py dari Makefile
+        sed -i 's/$(PYTHON) $(srctree)\/scripts\/gcc-wrapper.py //g' Makefile
+        
+        # 2. Sapu bersih sisa Git Conflict di file Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' init/Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' kernel/trace/Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' lib/Kconfig.debug
+        
+        # 3. FIX BPF_TRACE: Hapus 1 blok penuh Monster Git secara presisi
+        # Menghapus dari baris "<<<<<<< HEAD" sampai ke baris ">>>>>>>"
+        sed -i '/<<<<<<< HEAD/,/>>>>>>>/d' kernel/trace/bpf_trace.c
+        
+        # 4. FIX STAT.C: Jahit ulang luka dari KernelSU
+        # a. Ubah huruf 'q' yang nyasar menjadi '#endif'
+        sed -i 's/^[[:space:]]*q[[:space:]]*$/#endif/g' fs/stat.c
+        # b. Hapus baris if() yang cacat/terpotong (yang berakhiran AT_NO_AUTOMOUNT | )
+        sed -i '/AT_NO_AUTOMOUNT |/d' fs/stat.c
 
     - name: Fetch Toolchains
       if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' || github.event.inputs.UPDATE_TOOLCHAIN == 'true' }}
