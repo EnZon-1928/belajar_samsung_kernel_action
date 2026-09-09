@@ -4,15 +4,15 @@ on:
     inputs:
       REPO:
         description: 'Kernel repository'
-        default: 'blxyzY/android_kernel_samsung_sm6225.git'
+        default: 'IsaacCodesStuff/MizKernel-A235F.git'
         required: true
       BRANCH:
         description: 'Kernel branch'
-        default: 'stock'
+        default: 'main'
         required: true
       DEVICE_TARGET:
         description: 'Target device to build'
-        default: 'A235F'
+        default: 'a23nsxx'
         required: true
       DEFCONFIG:
         description: 'Defconfig name'
@@ -21,7 +21,7 @@ on:
       LTO:
         description: 'Link Time Optimisation'
         required: true
-        default: 'none'
+        default: 'thin'
         type: choice
         options:
           - none
@@ -34,7 +34,7 @@ on:
       KSU_BRANCH:
         description: 'KernelSU branch'
         required: true
-        default: 'master'
+        default: 'xxksu'
       KCFLAGS_W:
         description: 'Enable KCFLAGS=-w'
         type: boolean
@@ -121,13 +121,14 @@ jobs:
         # Handle KSU
         if [[ "$KSU" == "true" ]]; then
           device_defconfig="arch/arm64/configs/${{ inputs.DEFCONFIG }}"
-          curl -LSs "https://raw.githubusercontent.com/blxyzY/KernelSU/main/kernel/setup.sh" | bash -s "${{ inputs.KSU_BRANCH }}"
+          curl -LSs "https://raw.githubusercontent.com/RapliVx/KernelSU/xxksu/kernel/setup.sh" | bash -s "${{ inputs.KSU_BRANCH }}"
           
           echo "CONFIG_KSU=y" >> $device_defconfig
+          echo "CONFIG_KPROBES=n" >> $device_defconfig
           echo "CONFIG_KSU_DEBUG=n" >> $device_defconfig
           echo "CONFIG_KSU_TOOLKIT=n" >> $device_defconfig
           echo "CONFIG_KSU_EXTRAS=n" >> $device_defconfig
-          echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=n" >> $device_defconfig
+          echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> $device_defconfig
           
           if ! grep -q "CONFIG_KSU_TAMPER_SYSCALL_TABLE" "$device_defconfig"; then
             echo "Bail! Failed to append defconfig"
