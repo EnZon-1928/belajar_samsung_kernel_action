@@ -76,7 +76,7 @@ jobs:
         properties() { '
         kernel.string=MizKernel ZharVe1L (KSU-Next)
         do.devicecheck=0
-        do.modules=0
+        do.modules=1
         do.systemless=1
         do.cleanup=1
         do.cleanuponabort=0
@@ -103,6 +103,7 @@ jobs:
         
         # Ambil hasil kompilasi Image kernel dari output runner.sh
         cp ../arch/arm64/boot/Image .
+        cp ../arch/arm64/boot/dtb .
         
         # Bungkus semuanya menjadi file ZIP
         zip -r9 ../MizKernel-ZharVe1L-A235F-KSUNext.zip *
