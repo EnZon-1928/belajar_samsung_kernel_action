@@ -1,0 +1,115 @@
+name: Build MizKernel A235F (ZharVe1L)
+
+on:
+  workflow_dispatch: # Tombol pemicu manual di tab Actions
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: 1. Checkout MizKernel
+      uses: actions/checkout@v4
+      with:
+        repository: 'IsaacCodesStuff/MizKernel-A235F'
+        ref: 'main'
+        fetch-depth: 1
+        # PERHATIKAN: Baris "submodules: 'recursive'" DIHAPUS dari sini!
+
+    - name: 1.5. Kloning Bedah Spesifik (Anti-Babi Buta)
+      run: |
+        # 1. Tarik HANYA submodule yang dipastikan masih hidup satu per satu
+        git submodule update --init KernelSU-Next
+        git submodule update --init toolchain/aarch64-linux-android-4.9-llvm
+        git submodule update --init toolchain/clang-r383902
+        git submodule update --init toolchain/qcom-stuff-clang
+        
+        # 2. Buang cangkang kosong folder clang r416183b bawaan MizKernel (jika ada)
+        rm -rf toolchain/clang-r416183b
+        
+        # 3. Kloning Clang LineageOS secara manual persis ke lokasi yang dibutuhkan runner.sh
+        git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git toolchain/clang-r416183b
+
+    - name: 2. Install Dependencies (Berdasarkan gitpod.yml)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y aria2 figlet libncurses5 git python-is-python3 python2 python3 wget curl libc6-dev tar cpio default-jdk git-core gnupg flex bison gperf build-essential zip bc grep tofrodos python3-markdown libxml2-utils xsltproc zlib1g-dev
+
+    - name: 2.5. Operasi Bedah Presisi (Fix Kconfig, stat.c & bpf_trace.c)
+      run: |
+        # 1. Pecat gcc-wrapper.py dari Makefile
+        sed -i 's/$(PYTHON) $(srctree)\/scripts\/gcc-wrapper.py //g' Makefile
+        
+        # 2. Sapu bersih sisa Git Conflict di file Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' init/Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' kernel/trace/Kconfig
+        sed -i '/<<<<<<</d; /=======/d; />>>>>>>/d' lib/Kconfig.debug
+        
+        # 3. FIX BPF_TRACE: Hapus 1 blok penuh Monster Git secara presisi
+        # Menghapus dari baris "<<<<<<< HEAD" sampai ke baris ">>>>>>>"
+        sed -i '/<<<<<<< HEAD/,/>>>>>>>/d' kernel/trace/bpf_trace.c
+        
+        # 4. FIX STAT.C: Jahit ulang luka dari KernelSU
+        # a. Ubah huruf 'q' yang nyasar menjadi '#endif'
+        sed -i 's/^[[:space:]]*q[[:space:]]*$/#endif/g' fs/stat.c
+        # b. Hapus baris if() yang cacat/terpotong (yang berakhiran AT_NO_AUTOMOUNT | )
+        sed -i '/AT_NO_AUTOMOUNT |/d' fs/stat.c
+        
+    - name: 3. Kompilasi Kernel (Menjalankan runner.sh)
+      run: |
+        # Beri akses eksekusi ke script
+        chmod +x runner.sh
+        
+        # Eksekusi mesin utama MizKernel
+        bash runner.sh build
+
+    - name: 4. Merakit AnyKernel3 & Packaging
+      run: |
+        # Unduh AnyKernel3 murni dan hapus file sampah
+        git clone --depth 1 https://github.com/osm0sis/AnyKernel3.git AnyKernel3
+        cd AnyKernel3
+        rm -rf .git README.md *placeholder
+        
+        # Suntikkan anykernel.sh bersih (Aman untuk Stock ROM Samsung)
+        cat << 'EOF' > anykernel.sh
+        ### AnyKernel3 Ramdisk Mod Script
+        properties() { '
+        kernel.string=MizKernel ZharVe1L (KSU-Next)
+        do.devicecheck=0
+        do.modules=1
+        do.systemless=1
+        do.cleanup=1
+        do.cleanuponabort=0
+        supported.versions=
+        supported.patchlevels=
+        supported.vendorpatchlevels=
+        '; }
+
+        BLOCK=/dev/block/by-name/boot;
+        IS_SLOT_DEVICE=0;
+        RAMDISK_COMPRESSION=auto;
+        PATCH_VBMETA_FLAG=auto;
+
+        . tools/ak3-core.sh;
+
+        ui_print "- Memulai instalasi MizKernel ZharVe1L...";
+        dump_boot;
+        
+        ui_print "- Menambal AVB & dm-verity untuk Stock ROM...";
+        write_boot;
+        
+        ui_print "- Instalasi selesai!";
+        EOF
+        
+        # Ambil hasil kompilasi Image kernel dari output runner.sh
+        cp ../arch/arm64/boot/Image .
+        cp ../arch/arm64/boot/dtb .
+        
+        # Bungkus semuanya menjadi file ZIP
+        zip -r9 ../MizKernel-ZharVe1L-A235F-KSUNext.zip *
+
+    - name: 5. Upload File ZIP Siap Flash
+      uses: actions/upload-artifact@v4
+      with:
+        name: MizKernel-ZharVe1L-A235F
+        path: MizKernel-ZharVe1L-A235F-KSUNext.zip
