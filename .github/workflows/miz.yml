@@ -106,6 +106,8 @@ jobs:
         
         # Ambil peta hardware (khaje.dtb) dari laci aslinya dan rename jadi 'dtb'
         cp ../arch/arm64/boot/dts/vendor/qcom/khaje.dtb ./dtb
+
+        zip -r9 ../MizKernel-ZharVe1L-A235F-KSUNext.zip *
         
     - name: 5. Upload File ZIP Siap Flash
       uses: actions/upload-artifact@v4
