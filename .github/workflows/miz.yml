@@ -101,13 +101,12 @@ jobs:
         ui_print "- Instalasi selesai!";
         EOF
         
-        # Ambil hasil kompilasi Image kernel dari output runner.sh
-        cp ../arch/arm64/boot/Image .
-        cp ../arch/arm64/boot/dtb .
+        # Ambil hasil kompilasi Image kernel dari output (format .gz)
+        cp ../arch/arm64/boot/Image.gz .
         
-        # Bungkus semuanya menjadi file ZIP
-        zip -r9 ../MizKernel-ZharVe1L-A235F-KSUNext.zip *
-
+        # Ambil peta hardware (khaje.dtb) dari laci aslinya dan rename jadi 'dtb'
+        cp ../arch/arm64/boot/dts/vendor/qcom/khaje.dtb ./dtb
+        
     - name: 5. Upload File ZIP Siap Flash
       uses: actions/upload-artifact@v4
       with:
