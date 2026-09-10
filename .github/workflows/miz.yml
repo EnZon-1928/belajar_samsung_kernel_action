@@ -49,11 +49,11 @@ jobs:
         # Menghapus dari baris "<<<<<<< HEAD" sampai ke baris ">>>>>>>"
         sed -i '/<<<<<<< HEAD/,/>>>>>>>/d' kernel/trace/bpf_trace.c
         
-        # 4. FIX STAT.C: Jahit ulang luka dari KernelSU
         # a. Ubah huruf 'q' yang nyasar menjadi '#endif'
         sed -i 's/^[[:space:]]*q[[:space:]]*$/#endif/g' fs/stat.c
-        # b. Hapus baris if() yang cacat/terpotong (yang berakhiran AT_NO_AUTOMOUNT | )
-        sed -i '/AT_NO_AUTOMOUNT |/d' fs/stat.c
+        
+        # b. Sambung baris yang terpotong menjadi fungsi keamanan Linux yang utuh
+        sed -i 's/.*AT_NO_AUTOMOUNT |.*/\tif ((flags \& ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT | AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)\n\t\treturn -EINVAL;/g' fs/stat.c
         
     - name: 3. Kompilasi Kernel (Menjalankan runner.sh)
       run: |
