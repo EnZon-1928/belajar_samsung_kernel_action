@@ -101,12 +101,13 @@ jobs:
         ui_print "- Instalasi selesai!";
         EOF
         
-        # Ambil hasil kompilasi Image kernel dari output (format .gz)
-        cp ../arch/arm64/boot/Image.gz .
+        # Ambil Image.gz yang terkurung di dalam folder out/
+        cp ../out/arch/arm64/boot/Image.gz .
         
-        # Ambil peta hardware (khaje.dtb) dari laci aslinya dan rename jadi 'dtb'
-        cp ../arch/arm64/boot/dts/vendor/qcom/khaje.dtb ./dtb
-
+        # Ambil khaje.dtb yang terkurung di dalam folder out/ dan rename jadi dtb
+        cp ../out/arch/arm64/boot/dts/vendor/qcom/khaje.dtb ./dtb
+        
+        # Bungkus semuanya
         zip -r9 ../MizKernel-ZharVe1L-A235F-KSUNext.zip *
         
     - name: 5. Upload File ZIP Siap Flash
