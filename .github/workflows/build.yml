@@ -64,6 +64,10 @@ on:
         description: '🛡️ Enable KCFLAGS=-w'
         type: boolean
         default: true
+      UPDATE_TOOLCHAIN:
+        description: '🔄 Force update toolchain'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -77,18 +81,19 @@ jobs:
         fetch-depth: 1
 
     - name: 📥 Clone kernel source
-      if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
-      run: git clone --depth=1 --single-branch -b ${{ github.event.inputs.BRANCH }} --recursive https://github.com/${{ github.event.inputs.REPO }} kernel_root
-        
+      run: |
+        git clone --depth=1 --single-branch -b ${{ github.event.inputs.BRANCH }} --recursive https://github.com/${{ github.event.inputs.REPO }} kernel_root
+
     - name: 💾 Cache Toolchain
       id: cache-toolchain
       uses: actions/cache@v5
       with:
-        path: ~/neutron-clang
-        key: clang-${{ github.event.inputs.CLANG_VERSION }}-${{ github.sha }}
+        path: |
+          ~/neutron-clang
+          ~/androidcc
+        key: clang-${{ github.event.inputs.CLANG_VERSION }}-v2
         restore-keys: |
           clang-${{ github.event.inputs.CLANG_VERSION }}-
-          clang-
 
     - name: 🚀 Cache ccache
       uses: actions/cache@v5
@@ -101,7 +106,6 @@ jobs:
       run: chmod +x ./build.sh && bash ./build.sh --setup-deps
 
     - name: 🔧 Setup Build Environment
-      if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
       id: buildKernel
       run: |
         cd kernel_root
@@ -126,7 +130,6 @@ jobs:
       run: bash ./build.sh --fetch-toolchains
 
     - name: ⚡ Build Kernel
-      if: github.event.inputs.UPDATE_TOOLCHAIN != 'true'
       env:
         BRANCH: ${{ github.event.inputs.BRANCH }}
         TG_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -138,52 +141,94 @@ jobs:
         SELINUX: ${{ github.event.inputs.SELINUX }}
         CLANG_VERSION: ${{ github.event.inputs.CLANG_VERSION }}
         CI_ZIPNAME: "${{ steps.buildKernel.outputs.buildDetails }}.zip"
-        KCFLAGS_W: "${{ github.event.inputs.KCFLAGS_W }}"
+        KCFLAGS_W: ${{ github.event.inputs.KCFLAGS_W }}
       run: |
         cd kernel_root
         if [ ! -d ~/.ccache ]; then
           mkdir -p ~/.ccache
         fi
         
-        # Handle KSU
+        device_defconfig="arch/arm64/configs/${{ github.event.inputs.DEFCONFIG }}"
+        
+        # ===== HANDLE KernelSU =====
         if [[ "$KSU" == "true" ]]; then
-          device_defconfig="arch/arm64/configs/${{ inputs.DEFCONFIG }}"
           echo "🔑 Adding KernelSU support..."
-          curl -LSs "https://raw.githubusercontent.com/RapliVx/KernelSU/xxksu/kernel/setup.sh" | bash -s "${{ inputs.KSU_BRANCH }}"
           
-          echo "CONFIG_KSU=y" >> $device_defconfig
-          echo "CONFIG_KSU_DEBUG=n" >> $device_defconfig
-          echo "CONFIG_KSU_TOOLKIT=n" >> $device_defconfig
-          echo "CONFIG_KSU_EXTRAS=n" >> $device_defconfig
-          echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=n" >> $device_defconfig
-          
-          if ! grep -q "CONFIG_KSU_TAMPER_SYSCALL_TABLE" "$device_defconfig"; then
-            echo "❌ Fail! Failed to append defconfig"
+          if ! curl -LSs "https://raw.githubusercontent.com/RapliVx/KernelSU/xxksu/kernel/setup.sh" | bash -s "${{ github.event.inputs.KSU_BRANCH }}"; then
+            echo "❌ Failed to setup KernelSU!"
             exit 1
           fi
+          
+          # Verify KernelSU folder exists
+          if [ ! -d "KernelSU" ] && [ ! -d "drivers/kernelsu" ]; then
+            echo "⚠️ KernelSU folder not found, checking..."
+            ls -la | grep -i ksu
+          fi
+          
+          echo "CONFIG_KSU=y" >> "$device_defconfig"
+          echo "CONFIG_KSU_DEBUG=n" >> "$device_defconfig"
+          echo "CONFIG_KSU_TOOLKIT=n" >> "$device_defconfig"
+          echo "CONFIG_KSU_EXTRAS=n" >> "$device_defconfig"
+          echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=n" >> "$device_defconfig"
+          
           echo "✅ KernelSU added successfully!"
         fi
         
-        # Handle SELinux
-        device_defconfig="arch/arm64/configs/${{ inputs.DEFCONFIG }}"
-        if [[ "${{ inputs.SELINUX }}" == "permissive" ]]; then
+        # ===== HANDLE SELinux =====
+        if [[ "${{ github.event.inputs.SELINUX }}" == "permissive" ]]; then
           echo "🔓 Configuring kernel to SELinux Permissive..."
-          sed -i 's/CONFIG_CMDLINE=""/CONFIG_CMDLINE="androidboot.selinux=permissive"/' "$device_defconfig"
-          sed -i 's/# CONFIG_SECURITY_SELINUX_DEVELOP is not set/CONFIG_SECURITY_SELINUX_DEVELOP=y/' "$device_defconfig"
+          
+          # Fix CMDLINE (aman untuk yang sudah ada)
+          if grep -q "CONFIG_CMDLINE=" "$device_defconfig"; then
+            if ! grep -q "androidboot.selinux=permissive" "$device_defconfig"; then
+              sed -i 's/CONFIG_CMDLINE="\(.*\)"/CONFIG_CMDLINE="\1 androidboot.selinux=permissive"/' "$device_defconfig"
+            fi
+          else
+            echo 'CONFIG_CMDLINE="androidboot.selinux=permissive"' >> "$device_defconfig"
+          fi
+          
+          # Enable DEVELOP
+          if grep -q "CONFIG_SECURITY_SELINUX_DEVELOP" "$device_defconfig"; then
+            sed -i 's/# CONFIG_SECURITY_SELINUX_DEVELOP is not set/CONFIG_SECURITY_SELINUX_DEVELOP=y/' "$device_defconfig"
+          else
+            echo "CONFIG_SECURITY_SELINUX_DEVELOP=y" >> "$device_defconfig"
+          fi
+          
+          # Disable ENFORCE
           sed -i 's/CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE=y/# CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE is not set/' "$device_defconfig" 2>/dev/null || true
+          
+          # Enable PERMISSIVE
           if grep -q "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE" "$device_defconfig"; then
             sed -i 's/# CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE is not set/CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE=y/' "$device_defconfig"
           else
             echo "CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE=y" >> "$device_defconfig"
           fi
-          sed -i 's/CONFIG_SECURITY_DEFEX=y/# CONFIG_SECURITY_DEFEX is not set/' "$device_defconfig"
-          sed -i 's/CONFIG_PROCA=y/# CONFIG_PROCA is not set/' "$device_defconfig"
-          sed -i 's/CONFIG_FIVE=y/# CONFIG_FIVE is not set/' "$device_defconfig"
+          
+          # Disable Samsung security features
+          sed -i 's/CONFIG_SECURITY_DEFEX=y/# CONFIG_SECURITY_DEFEX is not set/' "$device_defconfig" 2>/dev/null || true
+          sed -i 's/CONFIG_PROCA=y/# CONFIG_PROCA is not set/' "$device_defconfig" 2>/dev/null || true
+          sed -i 's/CONFIG_FIVE=y/# CONFIG_FIVE is not set/' "$device_defconfig" 2>/dev/null || true
           
           echo "✅ SELinux: Permissive mode configured 🔓"
         else
           echo "🔒 Configuring kernel to SELinux Enforcing..."
-          sed -i 's/CONFIG_SECURITY_SELINUX_DEVELOP=y/# CONFIG_SECURITY_SELINUX_DEVELOP is not set/' "$device_defconfig"
+          
+          # Disable PERMISSIVE
+          sed -i 's/CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE=y/# CONFIG_SECURITY_SELINUX_ALWAYS_PERMISSIVE is not set/' "$device_defconfig" 2>/dev/null || true
+          
+          # Enable ENFORCE
+          if grep -q "CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE" "$device_defconfig"; then
+            sed -i 's/# CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE is not set/CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE=y/' "$device_defconfig"
+          else
+            echo "CONFIG_SECURITY_SELINUX_ALWAYS_ENFORCE=y" >> "$device_defconfig"
+          fi
+          
+          # Remove permissive from CMDLINE
+          if grep -q "CONFIG_CMDLINE=" "$device_defconfig"; then
+            sed -i 's/ androidboot.selinux=permissive//g' "$device_defconfig"
+            sed -i 's/androidboot.selinux=permissive //g' "$device_defconfig"
+            sed -i 's/androidboot.selinux=permissive//g' "$device_defconfig"
+          fi
           
           echo "✅ SELinux: Enforcing mode configured 🔒"
         fi
@@ -196,6 +241,6 @@ jobs:
       with:
         name: Kernel-${{ steps.buildKernel.outputs.buildDetails }}
         path: |
-          kernel_root/out/arch/arm64/boot/Image.gz
+          kernel_root/*.zip
           kernel_root/out/.config
           
