@@ -1,0 +1,25 @@
+name: System Hardware Check
+
+on: 
+  workflow_dispatch: # Enables manual execution from the Actions tab
+
+jobs:
+  inspect-hardware:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect CPU Specifications
+        run: |
+          # Output total number of processing units available
+          echo "Total CPU Cores: $(nproc)"
+          # Display detailed CPU architecture information
+          lscpu
+
+      - name: Inspect System Memory
+        run: |
+          # Display total, used, and free memory in human-readable format
+          free -h
+
+      - name: Inspect Disk Storage Capacity
+        run: |
+          # Report file system disk space usage in human-readable format
+          df -h
